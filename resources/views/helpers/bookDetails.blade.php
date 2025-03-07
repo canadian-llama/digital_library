@@ -1,11 +1,11 @@
 <x-layout href="{{ route('home') }}">
     <x-book>
         <h2>{{ $book->book_title }}</h2>
-        <form action="{{ route('book.favorite', [Auth::user()->id, $book->id]) }}">
+        <form action="{{ route('book.favorite', ['favorite',Auth::user()->id, $book->id]) }}" method="post">
             @csrf
             <button type="submit" class="btn">Favourite</button>
         </form>
-        <form action="{{ route('book.unfavorite', [Auth::user()->id, $book->id]) }}" method="post">
+        <form action="{{ route('book.favorite', ['unfavorite',Auth::user()->id, $book->id]) }}" method="post">
             @csrf
             <button type="submit" class="btn">UnFavorite</button>
         </form>

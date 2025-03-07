@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\FavouriteSystem;
+use App\Events\NotificationSystem;
 use App\Models\Book;
 use App\Models\Favorite;
 use App\Models\User;
@@ -107,7 +109,7 @@ class BookController extends Controller
         $genreArray = $request->input('genre');
         $genre = implode(',', $genreArray);
 
-        // dd($genre);
+        event(new NotificationSystem('New Book Added'));
 
         Book::create([
             'book_title' => $request->input('title'),
@@ -212,27 +214,16 @@ class BookController extends Controller
         // return view('helpers.download');
     }
 
-    public function favorite($userid, $bookid)
+    public function favorite($var, $userid, $bookid)
     {
-        $favorite = Favorite::where(['user_id' => $userid, 'book_id' => $bookid])->get();
-        // dd($favorite->isEmpty());
-        if ($favorite->isEmpty()) {
-            Favorite::create([
-                'user_id' => $userid,
-                'book_id' => $bookid
-            ]);
+        if ($var === 'favorite') {
+            event(new FavouriteSystem($var, $userid, $bookid));
+            event(new NotificationSystem('New Book Added'));
             return redirect()->route('book.show', ['view-book-details', $bookid])->with('success', 'Favourite successful');
+        } else {
+            event(new FavouriteSystem($var, $userid, $bookid));
+            return redirect()->route('book.show', ['view-book-details', $bookid])->with('success', 'UnFavourite Successful');
         }
-
-        return redirect()->route('book.show', ['view-book-details', $bookid])->with('success', 'Already Favourite');
     }
 
-    public function unfavorite($userid, $bookid)
-    {
-        $favorite = Favorite::where('user_id', $userid)->where('book_id', $bookid)->delete();
-        if($favorite){
-            return redirect()->route('book.show', ['view-book-details', $bookid])->with('success', 'UnFavourite successful');
-        }
-        return redirect()->route('book.show', ['view-book-details', $bookid])->with('success', 'Not already Favourite');
-    }
 }

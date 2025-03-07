@@ -47,18 +47,11 @@ Route::middleware('auth')->group(function () {
  
     Route::post('/admin/delete-book/{id}', [BookController::class, 'delete'])->name('book.delete');
 
-    Route::get('/user/follow-user/{userid}/{followerid}', [UserController::class, 'follow'])->name('user.follow');
+    Route::get('/user/{var}/{userid}/{followerid}', [UserController::class, 'follow'])->name('user.follow');
 
-    Route::get('/user/unfollow-user/{userid}/{followerid}', [UserController::class, 'unfollow'])->name('user.unfollow');
-
-    Route::get('/user/favorite/{userid}/{bookid}', [BookController::class, 'favorite'])->name('book.favorite');
-
-    Route::post('/user/unfavorite/{userid}/{bookid}', [BookController::class, 'unfavorite'])->name('book.unfavorite');
+    Route::post('/user/{var}/{userid}/{bookid}', [BookController::class, 'favorite'])->name('book.favorite');
 
 });
-
-
-
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

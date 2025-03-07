@@ -4,15 +4,15 @@
     <div>
         <img src="" alt="image" class="size-40 rounded-xl">
         <p>{{ $user->name }}</p>
-        <p>Followers: {{ $user->followers }}</p>
-        <p>Following: {{ $user->following }}</p>
+        <p>Followers: {{ count($user->followers) }}</p>
+        <p>Following: {{ count($user->followings) }}</p>
         <p>Favourite: {{ $user->following }}</p>
         <!-- <p>Following: {{ $user->following }}</p> -->
-        <form action="{{ route('user.follow', [$user->id, Auth::user()->id]) }}">
+        <form action="{{ route('user.follow', ['follow', $user->id, Auth::user()->id]) }}">
             @csrf
             <button type="submit" class="btn">Follow</button>
         </form>
-        <form action="{{ route('user.unfollow', [$user->id, Auth::user()->id]) }}">
+        <form action="{{ route('user.follow', ['unfollow', $user->id, Auth::user()->id]) }}">
             @csrf
             <button type="submit" class="btn">UnFollow</button>
         </form>

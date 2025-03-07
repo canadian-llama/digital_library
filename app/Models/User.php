@@ -37,6 +37,16 @@ class User extends Authenticatable
     public function favourites(){
         return $this->hasMany(Favorite::class);
     }
+
+    public function followers()
+    {
+        return $this->hasMany(Followers::class);
+    }
+
+    public function followings()
+    {
+        return $this->hasMany(Following::class);
+    }
     /**
      * The attributes that should be hidden for serialization.
      *

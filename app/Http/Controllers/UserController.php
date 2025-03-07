@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\FollowSystem;
 use App\Models\Book;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -110,60 +111,28 @@ class UserController extends Controller
         return redirect()->route('home')->with('success', 'only admin can access route');
     }
 
-    public function search(Request $request)
+    // public function search(Request $request)
+    // {
+    //     $request->validate([
+    //         'search' => 'min:3'
+    //     ]);
+
+    //     $search = $request->input('search');
+
+    //     $books = Book::where('book_title', 'like', '%' . $search . '%')->get();
+
+    //     // dd(gettype($search_results));
+
+    //     return view('users.index', ['books' => $books, 'search' => $request->search]);
+    // }
+
+    public function follow($var, $userid, $followerid)
     {
-        $request->validate([
-            'search' => 'min:3'
-        ]);
-
-        $search = $request->input('search');
-
-        $books = Book::where('book_title', 'like', '%' . $search . '%')->get();
-
-        // dd(gettype($search_results));
-
-        return view('users.index', ['books' => $books, 'search' => $request->search]);
-    }
-
-    public function follow($userid, $followerid) {
-        $user1 = User::findOrFail($userid);
-        $user2 = User::findOrFail($followerid);
-        $follower = 0;
-        $following = 0;
-
-        if($follower >= 0 && $following >= 0){
-            $follower +=1;
-            $following +=1;
+        if ($var === 'follow') {
+            event(new FollowSystem($var, $userid, $followerid));
+            return redirect()->route('book.show', ['view-profile', $userid])->with('success', 'user followed');
         }
-
-        $user1->update([
-            'followers' => $follower
-        ]);
-        $user2->update([
-            'following' =>$following
-        ]);
-
-        return redirect()->route('book.show', ['view-profile',$userid])->with('success', 'user followed');
-    }
-
-    public function unfollow($userid, $followerid)
-    {
-        $user1 = User::findOrFail($userid);
-        $user2 = User::findOrFail($followerid);
-        $follower = $user1->followers;
-        $following = $user2->following;
-        
-        if ($follower >= 0 && $following >= 0) {
-            $follower -= 1;
-            $following -= 1;
-        }
-        $user1->update([
-            'followers' => $follower
-        ]);
-        $user2->update([
-            'following' => $following
-        ]);
-        
+        event(new FollowSystem($var, $userid, $followerid));
         return redirect()->route('book.show', ['view-profile', $userid])->with('success', 'user unfollowed');
     }
 
