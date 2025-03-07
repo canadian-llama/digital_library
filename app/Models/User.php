@@ -20,9 +20,23 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'username',
         'password',
+        'role',
+        'followers',
+        'following',
+        'uploads',
+        'downloads'
     ];
 
+    public function books()
+    {
+        return $this->hasMany(Book::class);
+    }
+
+    public function favourites(){
+        return $this->hasMany(Favorite::class);
+    }
     /**
      * The attributes that should be hidden for serialization.
      *

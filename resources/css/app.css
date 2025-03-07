@@ -1,3 +1,96 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+    @apply bg-[#06d6a0]  text-[#102542] flex-auto;
+    font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+        "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+}
+
+h1 {
+    @apply text-2xl font-bold;
+}
+
+h2 {
+    @apply text-xl font-bold my-4;
+}
+
+h3 {
+    @apply text-lg font-bold my-4;
+}
+
+ul {
+    @apply my-10;
+}
+
+ul {
+    @apply my-2;
+}
+
+ol {
+    @apply my-10;
+}
+
+ol {
+    @apply my-2;
+}
+
+p {
+    @apply my-2;
+}
+
+header {
+    @apply bg-[#F8FFE5];
+
+    nav {
+        @apply flex flex-row-reverse items-center gap-5 max-w-screen-lg px-12 py-4 mx-auto;
+    }
+
+    h1 {
+        @apply mr-auto;
+    }
+}
+
+/* form{
+    @apply max-w-screen-sm;
+} */
+
+a{
+    @apply bg-slate-500
+}
+
+input,
+select,
+textarea {
+    @apply block w-full mt-2 mb-4 p-2;
+}
+
+textarea {
+    @apply contain-size size-full max-h-full max-w-full;
+}
+.container {
+    @apply max-w-screen-lg mx-auto my-auto px-12 py-12;
+}
+
+.form {
+    @apply min-h-screen flex items-center justify-center bg-gray-100 rounded-lg shadow-md
+    p-8 w-full flex-col gap-2 basis-full;
+}
+
+.row {
+    @apply rounded-lg;
+}
+
+.card {
+    @apply bg-white rounded border border-gray-200 px-3 py-3 my-2 flex justify-between
+    items-center;
+}
+
+.highlight {
+    @apply border-l-4 border-l-red-500;
+}
+
+.btn {
+    @apply bg-[#06d6a0] rounded px-3 py-2 hover:bg-[#F8FFE5] hover:text-[#102542];
+}
