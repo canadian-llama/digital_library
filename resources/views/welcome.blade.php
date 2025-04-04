@@ -1,4 +1,11 @@
-<x-layout href="{{ route('landing') }}">
-    <h2 class="text-center my-10">Welcome to Cloud's Library</h2>
-    <a href="{{ route('home') }}" class="btn">Go to dashboard</a>
+<x-layout>
+    <livewire:book-library />
+
+    <x-modal name="login">
+        <livewire:forms.login />
+    </x-modal>
+
+    <x-modal name="register">
+        <livewire:forms.register />
+    </x-modal>
 </x-layout>

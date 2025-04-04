@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Events\FavouriteSystem;
 use App\Events\NotificationSystem;
 use App\Models\Book;
+use App\Models\DownloadHistory;
 use App\Models\Favorite;
+// use App\Models\Followers;
+use App\Models\Following;
+use App\Models\UploadHistory;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,17 +37,26 @@ class BookController extends Controller
             return view('helpers.download', compact('book'));
         } elseif ($var === 'view-profile') {
             $user = User::findOrFail($id);
-            return view('users.profile', compact('user'));
+            $follow = Following::where('following_id', Auth::user()->id)->get();
+            // dd($follow);
+            return view('users.profile', compact('user', 'follow'));
         } elseif ($var === 'view-book-details') {
             $book = Book::findOrFail($id);
+
+            if(Auth::user()){
+                $favorite = Favorite::where('book_id', $id)->where('user_id', Auth::user()->id)->get();
+                // dd($favorite);
+                return view('helpers.bookDetails', compact('book', 'favorite'));
+            }
             return view('helpers.bookDetails', compact('book'));
+            
         }
     }
 
 
     public function store(Request $request)
     {
-
+        $user = User::findOrFail(Auth::user()->id);
         $format = $request->input('format');
 
         if ($format === 'pdf') {
@@ -72,7 +85,7 @@ class BookController extends Controller
 
             // dd($genre);
 
-            Book::create([
+            $book = Book::create([
                 'book_title' => $request->input('title'),
                 'book_description' => $request->input('description'),
                 'book_genre' => $genre,
@@ -83,7 +96,17 @@ class BookController extends Controller
                 'user_id' => $id
             ]);
 
-            return redirect()->route('admin.show', 'all-books')->with('success', 'New Book uploaded successfully');
+            dd($book->user->id);
+
+            UploadHistory::create([
+                'book_id' => $book->user->id,
+                'user_id' => Auth::user()->id
+             ]);
+
+            $user->update([
+                'uploads' => count($user->Uploads)
+            ]);
+            // return redirect()->route('show', 'all-books')->with('success', 'New Book uploaded successfully');
         }
 
         $request->validate([
@@ -109,7 +132,7 @@ class BookController extends Controller
         $genreArray = $request->input('genre');
         $genre = implode(',', $genreArray);
 
-        event(new NotificationSystem('New Book Added'));
+        // event(new NotificationSystem('New Book Added'));
 
         Book::create([
             'book_title' => $request->input('title'),
@@ -122,7 +145,11 @@ class BookController extends Controller
             'user_id' => $id
         ]);
 
-        return redirect()->route('admin.show', 'all-books')->with('success', 'New Book uploaded successfully');
+        $user->update([
+            'uploads' => count($user->Uploads)
+        ]);
+
+        return redirect()->route('show', 'all-books')->with('success', 'New Book uploaded successfully');
     }
 
     public function search(Request $request)
@@ -179,7 +206,7 @@ class BookController extends Controller
             'display_image' => $image_path,
         ]);
 
-        return redirect()->route('admin.show', 'all-books')->with('success', 'New Book uploaded successfully');
+        return redirect()->route('show', 'all-books')->with('success', 'New Book uploaded successfully');
     }
 
     public function delete($id)
@@ -197,33 +224,47 @@ class BookController extends Controller
 
         $book->delete();
 
-        return redirect()->route('admin.show', 'all-books')->with('success', 'Book Deleted Successfully');
+        return redirect()->route('show', 'all-books')->with('success', 'Book Deleted Successfully');
     }
 
     public function download($id)
     {
         $book = Book::findOrFail($id);
+        $userid = Auth::user()->id;
+        $bookid = $book->id;
 
+        $user = User::findOrFail($userid);
 
         $path = Storage::path('\public/' . $book->book_url);
 
+        DownloadHistory::create([
+            'user_id' => $userid,
+            'book_id' => $bookid
+        ]);
+
+        $user->update([
+            'downloads' => count($user->DownloadHistories)
+        ]);
+
 
         return response()->download($path);
-
-
-        // return view('helpers.download');
     }
 
-    public function favorite($var, $userid, $bookid)
+    public function favorite($var, $bookid)
     {
-        if ($var === 'favorite') {
+
+        $userid = Auth::user()->id;
+
+        $favorite = Favorite::where('user_id', $userid)->get();
+        if ($favorite->isEmpty()) {
             event(new FavouriteSystem($var, $userid, $bookid));
-            event(new NotificationSystem('New Book Added'));
-            return redirect()->route('book.show', ['view-book-details', $bookid])->with('success', 'Favourite successful');
+            event(new NotificationSystem('You Favorite a book', Auth::user()->id, 'favorite'));
+            return redirect()->route('book.show', ['view-book-details', $bookid])->with('success', 'Favourite');
         } else {
+            // dd('else');
             event(new FavouriteSystem($var, $userid, $bookid));
-            return redirect()->route('book.show', ['view-book-details', $bookid])->with('success', 'UnFavourite Successful');
+            event(new NotificationSystem('You UnFavorite a book', Auth::user()->id, 'favorite'));
+            return redirect()->route('book.show', ['view-book-details', $bookid])->with('success', 'UnFavourite');
         }
     }
-
 }

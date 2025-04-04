@@ -17,7 +17,7 @@ class FollowSystem
     /**
      * Create a new event instance.
      */
-    public function __construct(public String $var, public int $userid, public int $followerid)
+    public function __construct(public int $userid, public int $followerid)
     {
         // 
     }

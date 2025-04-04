@@ -3,30 +3,41 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Illuminate\Contracts\Auth\CanResetPassword;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail,CanResetPassword
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
      */
+
+    protected $dates = ['deleted_at'];
     protected $fillable = [
         'name',
         'email',
         'username',
         'password',
         'role',
-        'followers',
+        'followed',
         'following',
         'uploads',
-        'downloads'
+        'downloads',
+        'comments',
+        'bio',
+        'profile_image',
+        'suspended',
+        'deactivated',
     ];
 
     public function books()
@@ -47,6 +58,30 @@ class User extends Authenticatable
     {
         return $this->hasMany(Following::class);
     }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function Uploads()
+    {
+        return $this->hasMany(UploadHistory::class);
+    }
+
+    public function DownloadHistories()
+    {
+        return $this->hasMany(DownloadHistory::class);
+    }
+
+    public function notifications(){
+        return $this->hasMany(Notifications::class);
+    }
+
+    public function setting(){
+        return $this->hasOne(Setting::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

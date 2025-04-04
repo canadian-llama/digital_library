@@ -17,7 +17,7 @@ class NotificationSystem
     /**
      * Create a new event instance.
      */
-    public function __construct(public string $message, public int $id = 0)
+    public function __construct(public string $message, public int $id = 0, public String $type)
     {
         //
     }

@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Events\FollowSystem;
+use App\Events\NotificationSystem;
 use App\Models\Book;
+use App\Models\Comment;
+use App\Models\Followers;
+use App\Models\Following;
 use App\Models\User;
+use Illuminate\Auth\Events\Validated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +25,7 @@ class UserController extends Controller
         // dd(Auth::user()->role === 'admin');
         if (Auth::user()->role === 'admin') {
             $users = User::orderby('created_at', 'desc')->paginate(10);
-            return view('admin.index', compact('users'));
+            return redirect()->route('admin-dashboard');
         }
         $books = Book::orderBy('created_at', 'desc')->paginate(10);
 
@@ -28,9 +33,8 @@ class UserController extends Controller
     }
 
 
-    public function show($var)
+    public function show($name = 'admin', $var,)
     {
-        // dd(view('admin.allUsers',));
         if (Auth::user()->role === 'admin') {
             if ($var === 'all-users') {
                 $users = User::orderby('created_at', 'desc')->paginate(10);
@@ -42,6 +46,12 @@ class UserController extends Controller
                 return view('admin.addUsers');
             } elseif ($var === 'add-books') {
                 return view('admin.addBooks');
+            }
+        } else {
+            if ($var === 'view-profile') {
+                $user = User::findOrFail(Auth::user()->id);
+                // dd($user->followings);
+                return view('users.profile', compact('user'));
             }
         }
         // return redirect()->route('user.dashboard');
@@ -61,25 +71,34 @@ class UserController extends Controller
 
             User::create($validated);
 
-            return redirect()->route('admin.show', 'all-users')->with('success', 'New User added successfully');
+            return redirect()->route('show', 'all-users')->with('success', 'New User added successfully');
         }
         return redirect()->route('home')->with('success', 'only admin can access route');
     }
 
-    public function edit($id)
+    public function edit($var = 'admin', $id)
     {
-        if (Auth::user()->role === 'admin') {
+        // dd($var);
+        if (Auth::user()->role === 'admin' && $var === 'admin') {
+            // dd('if');
             $user = User::findOrFail($id);
 
             return view('admin.editUser', compact('user'));
+        } elseif (Auth::user()->role === 'user' && $var === 'user') {
+            // dd('elseif');
+            $user = User::findOrFail($id);
+            return view('admin.editUser', compact('user'));
+        } else {
+            dd('else');
+            return redirect()->route('home')->with('success', 'only admin can access route');
         }
-
-        return redirect()->route('home')->with('success', 'only admin can access route');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $var = 'admin', $id)
     {
-        if (Auth::user()->role === 'admin') {
+        // dd(Auth::user()->role === 'admin' && $var === 'admin');
+        if (Auth::user()->role === 'admin' && $var === 'admin') {
+            dd('if');
             $validated =
 
                 $request->validate([
@@ -94,7 +113,21 @@ class UserController extends Controller
 
             $user->update($validated);
 
-            return redirect()->route('admin.show', 'all-users')->with('success', 'User Updated Successfully');
+            return redirect()->route('show', 'all-users')->with('success', 'User Updated Successfully');
+        } elseif (Auth::user()->role === 'user' && $var === 'user') {
+            $validated =
+
+                $request->validate([
+                    'name' => 'required|string|max:255',
+                    'username' => 'required|string|max:255',
+                    'password' => 'required|string|min:8|confirmed',
+                ]);
+
+            $user = User::findOrFail($id);
+
+            $user->update($validated);
+
+            return redirect()->route('show', 'all-users')->with('success', 'User Updated Successfully');
         }
         return redirect()->route('home')->with('success', 'only admin can access route');
     }
@@ -106,34 +139,61 @@ class UserController extends Controller
 
             $user->delete();
 
-            return redirect()->route('admin.show', 'all-users')->with('success', 'User Deleted Successfully');
+            return redirect()->route('show', 'all-users')->with('success', 'User Deleted Successfully');
         }
         return redirect()->route('home')->with('success', 'only admin can access route');
     }
 
-    // public function search(Request $request)
-    // {
-    //     $request->validate([
-    //         'search' => 'min:3'
-    //     ]);
-
-    //     $search = $request->input('search');
-
-    //     $books = Book::where('book_title', 'like', '%' . $search . '%')->get();
-
-    //     // dd(gettype($search_results));
-
-    //     return view('users.index', ['books' => $books, 'search' => $request->search]);
-    // }
-
-    public function follow($var, $userid, $followerid)
+    public function follow($userid, $followerid)
     {
-        if ($var === 'follow') {
-            event(new FollowSystem($var, $userid, $followerid));
+        $followers = Followers::where('user_id', $followerid)->where('follower_id', $userid)->get();
+        $followings = Following::where('user_id', $userid)->where('following_id', $followerid)->get();
+
+        // dd((int)$followerid, Auth::user()->id);
+        // dd(Auth::user()->followings->where((int)$followerid,Auth::user()->id));
+
+        if ($followers->isEmpty() && $followings->isEmpty()) {
+            event(new FollowSystem($userid, $followerid));
             return redirect()->route('book.show', ['view-profile', $userid])->with('success', 'user followed');
+        } else {
+            // dd('else');
+            event(new FollowSystem($userid, $followerid));
+            return redirect()->route('book.show', ['view-profile', $userid])->with('success', 'user unfollowed');
         }
-        event(new FollowSystem($var, $userid, $followerid));
-        return redirect()->route('book.show', ['view-profile', $userid])->with('success', 'user unfollowed');
     }
 
+    public function comment(Request $request, $bookid)
+    {
+        $userid = Auth::user()->id;
+        $username = Auth::user()->username;
+
+        $validated = $request->validate([
+            'comment' => 'required'
+        ]);
+
+        Comment::create([
+            'user_id' => $userid,
+            'book_id' => $bookid,
+            'username' => $username,
+            'comment' => $request->input('comment')
+        ]);
+        event(new NotificationSystem('You commented on book', Auth::user()->id, 'comment'));
+        return redirect()->route('book.show', ['view-book-details', $bookid])->with('success', 'Commented');
+    }
+
+    public function reply(Request $request, $bookid)
+    {
+        $userid = Auth::user()->id;
+
+        $validated = $request->validate([
+            'comment' => 'required'
+        ]);
+
+        Comment::create([
+            'user_id' => $userid,
+            'book_id' => $bookid,
+            'comment' => $request->input('comment')
+        ]);
+        return redirect()->route('book.show', ['view-book-details', $bookid])->with('success', 'Commented');
+    }
 }

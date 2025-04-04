@@ -26,8 +26,26 @@ class Book extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function genre(){
+        return $this->belongsTo(Genre::class);
+    }
+
+    public function author(){
+        return $this->belongsTo(Author::class);
+    }
+
     public function favourites()
     {
         return $this->hasMany(Favorite::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function downloadHistories()
+    {
+        return $this->hasMany(DownloadHistory::class);
     }
 }
